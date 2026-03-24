@@ -1,0 +1,30 @@
+{pkgs}: {
+  deps = [
+    pkgs.xorg.libXrender
+    pkgs.fontconfig
+    pkgs.freetype
+    pkgs.gcc-unwrapped
+    pkgs.gdk-pixbuf
+    pkgs.cairo
+    pkgs.atk
+    pkgs.pango
+    pkgs.xorg.libXi
+    pkgs.xorg.libXfixes
+    pkgs.xorg.libXdamage
+    pkgs.xorg.libXcursor
+    pkgs.xorg.libXcomposite
+    pkgs.xorg.libXrandr
+    pkgs.xorg.libXext
+    pkgs.xorg.libX11
+    pkgs.xorg.libxcb
+    pkgs.mesa
+    pkgs.libdrm
+    pkgs.alsa-lib
+    pkgs.nss
+    pkgs.glib
+    pkgs.gtk3
+    pkgs.dbus
+    pkgs.xvfb-run
+    pkgs.firefox
+  ];
+}
