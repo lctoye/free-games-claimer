@@ -37,7 +37,13 @@ All configuration is done via environment variables, loaded from `data/config.en
 - **Database**: lowdb (JSON files in `data/`)
 
 ## Workflow
-- **Start application**: `node epic-games.js` (console output)
+- **Start application**: `bash -c "node prime-gaming.js; node gog.js; echo sleeping; sleep 1d"` (console output, checks Prime Gaming and GOG)
+
+## Environment Variables (configured)
+- `EMAIL`, `EG_EMAIL`, `GOG_EMAIL` = 2ChrisOrr@gmail.com
+- `PG_EMAIL` = chrisorr@email.com
+- `NOTIFY_TITLE` = Free Games Claimer
+- Secrets: `EG_PASSWORD`, `PG_PASSWORD`, `GOG_PASSWORD`, `NOTIFY` (Pushover)
 
 ## System Dependencies
 - firefox, xvfb-run, dbus, gtk3, glib, nss, alsa-lib, libdrm, mesa

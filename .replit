@@ -21,12 +21,12 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node epic-games.js"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash -c \"node prime-gaming.js; node gog.js; echo sleeping; sleep 1d\""
 
 [userenv]
 
