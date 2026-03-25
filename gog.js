@@ -1,5 +1,4 @@
 import { chromium } from 'patchright';
-import chalk from 'chalk';
 import { resolve, jsonDb, datetime, filenamify, prompt, confirm, notify, html_game_list, handleSIGINT, log } from './src/util.js';
 import { cfg } from './src/config.js';
 

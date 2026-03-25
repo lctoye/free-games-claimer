@@ -1,6 +1,5 @@
 import { chromium } from 'patchright';
 import { authenticator } from 'otplib';
-import chalk from 'chalk';
 import path from 'path';
 import { existsSync, writeFileSync } from 'fs';
 import { resolve, jsonDb, datetime, filenamify, prompt, confirm, notify, html_game_list, handleSIGINT, log } from './src/util.js';
