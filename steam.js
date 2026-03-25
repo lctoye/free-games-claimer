@@ -87,7 +87,7 @@ async function getGameDetails(p, url) {
 
   await dismissAgeGate(p);
 
-  const details = { url, title: null, rating: null, ratingText: null, originalPrice: null, isFree: false, isFreeToPlay: false, isFreeWeekend: false, alreadyOwned: false, canClaim: false };
+  const details = { url, title: null, rating: null, ratingText: null, originalPrice: null, isFree: false, isFreeToPlay: false, isFreeWeekend: false, isTemporaryPromo: false, alreadyOwned: false, canClaim: false };
 
   try {
     details.title = await p.locator('#appHubAppName, .apphub_AppName').first().innerText();
@@ -137,6 +137,16 @@ async function getGameDetails(p, url) {
       const finalText = (await discountFinal.innerText()).trim().toLowerCase();
       const finalPrice = parsePrice(finalText);
       details.isFree = finalText === 'free' || (finalPrice !== null && finalPrice === 0);
+    }
+  } catch (_) {}
+
+  try {
+    const discountEndEl = p.locator('.game_purchase_discount_countdown, .discount_countdown, [data-countdown-date]');
+    if (await discountEndEl.count() > 0) {
+      details.isTemporaryPromo = true;
+    }
+    if (details.originalPrice && details.originalPrice > 0 && !details.isFreeToPlay) {
+      details.isTemporaryPromo = true;
     }
   } catch (_) {}
 
@@ -333,7 +343,13 @@ try {
   let skipped = 0;
 
   for (const game of freeGames) {
+    const appId = game.url.match(/\/app\/(\d+)/)?.[1] || game.url.split('/').filter(Boolean).pop();
     console.log(`\nProcessing: ${chalk.blue(game.name)}`);
+
+    if (db.data[user][appId]?.status === 'claimed' || db.data[user][appId]?.status === 'existed') {
+      console.log(`  Already processed (${db.data[user][appId].status}). Skipping.`);
+      continue;
+    }
 
     if (game.rating !== null && game.rating < cfg.steam_min_rating) {
       console.log(`  Skipped: rating ${game.ratingText} (${game.rating}/9) below minimum ${cfg.steam_min_rating}/9`);
@@ -355,7 +371,6 @@ try {
 
     const details = await getGameDetails(page, game.url);
     const title = details.title || game.name;
-    const appId = game.url.match(/\/app\/(\d+)/)?.[1] || game.url.split('/').filter(Boolean).pop();
 
     db.data[user][appId] ||= { title, time: datetime(), url: game.url };
 
@@ -380,6 +395,12 @@ try {
 
     if (!details.isFree) {
       console.log('  Game is not currently free on store page. Skipping.');
+      skipped++;
+      continue;
+    }
+
+    if (!details.isTemporaryPromo) {
+      console.log('  Skipped: could not confirm this is a temporary promotion (may be permanently free).');
       skipped++;
       continue;
     }
