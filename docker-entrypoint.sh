@@ -2,9 +2,18 @@
 
 set -eo pipefail # exit on error, error on any fail in pipe (not just last cmd); add -x to print each cmd; see gist bash_strict_mode.md
 
-echo "Version: https://github.com/vogler/free-games-claimer/tree/${COMMIT}"
+if [ -n "$COMMIT" ]; then
+  echo "Version: https://github.com/vogler/free-games-claimer/tree/${COMMIT}"
+else
+  LOCAL_COMMIT=$(git -C /fgc rev-parse --short HEAD 2>/dev/null || echo "unknown")
+  echo "Version: ${LOCAL_COMMIT}"
+fi
 [ -n "$BRANCH" ] && [ "$BRANCH" != "main" ] && echo "Branch: ${BRANCH}"
-echo "Build: $NOW"
+if [ -n "$NOW" ]; then
+  echo "Build: $NOW"
+else
+  echo "Build: $(date -u '+%Y-%m-%d %H:%M:%S UTC') (local)"
+fi
 
 BROWSER="${BROWSER_DIR:-data/browser}"
 

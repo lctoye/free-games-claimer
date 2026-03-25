@@ -147,103 +147,79 @@ async function discoverFreeGames(p) {
   await p.goto(URL_STEAMDB_FREE, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(5000);
 
-  const games = await p.evaluate(() => {
-    const results = [];
+  if (cfg.debug) {
+    const pageText = await p.locator('body').innerText();
+    console.log('SteamDB page text (first 2000 chars):', pageText.substring(0, 2000));
+  }
 
-    const mainEl = document.querySelector('#main, main, [role="main"]') || document.body;
+  const storeLinks = await p.locator('a[href*="store.steampowered.com/app/"]').all();
+  const seen = new Set();
+  const games = [];
 
-    let boundary = null;
-    const allHeadings = mainEl.querySelectorAll('h1, h2, h3');
-    for (const h of allHeadings) {
-      const t = h.innerText.toLowerCase();
-      if (t.includes('potentially upcoming') || t.includes('play for free') || t.includes('free weekend')) {
-        boundary = h;
-        break;
-      }
-    }
-
-    const storeLinks = mainEl.querySelectorAll('a[href*="store.steampowered.com/app/"]');
-
-    for (const link of storeLinks) {
-      if (boundary && link.compareDocumentPosition(boundary) & Node.DOCUMENT_POSITION_PRECEDING) {
-        continue;
-      }
-
-      const storeUrl = link.href;
-      const appMatch = storeUrl.match(/\/app\/(\d+)/);
+  for (const link of storeLinks) {
+    try {
+      const href = await link.getAttribute('href');
+      const appMatch = href.match(/\/app\/(\d+)/);
       if (!appMatch) continue;
       const appId = appMatch[1];
+      if (seen.has(appId)) continue;
 
-      let card = link.parentElement;
-      for (let i = 0; i < 8 && card && card !== mainEl && card !== document.body; i++) {
-        const siblings = card.parentElement?.children;
-        if (siblings && siblings.length > 1) break;
-        card = card.parentElement;
-      }
-      if (!card || card === mainEl || card === document.body) continue;
-
-      const cardText = card.innerText || '';
-      const cardLower = cardText.toLowerCase();
-
-      if (cardLower.includes('play for free') || cardLower.includes('free weekend')) continue;
-
-      let name = null;
-      const headings = card.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      for (const h of headings) {
-        const t = h.innerText.trim();
-        if (t.length >= 2 && !t.match(/^https?:\/\//)) {
-          name = t;
+      let cardEl = link;
+      let cardText = '';
+      for (let depth = 0; depth < 12; depth++) {
+        cardEl = cardEl.locator('..');
+        try {
+          cardText = await cardEl.innerText({ timeout: 2000 });
+        } catch (_) { break; }
+        const cardLower = cardText.toLowerCase();
+        if (cardLower.includes('free to keep') || cardLower.includes('play for free') || cardLower.includes('free weekend')) {
           break;
         }
       }
-      if (!name || name.length < 2) {
-        const subLink = card.querySelector('a[href*="steamdb.info/sub/"], a[href*="steamdb.info/app/"]');
-        if (subLink) {
-          const linkText = subLink.innerText.trim();
-          if (linkText.length >= 2 && !linkText.match(/^https?:\/\//)) {
-            name = linkText;
-          }
+
+      const cardLower = cardText.toLowerCase();
+      if (!cardLower.includes('free to keep')) continue;
+      if (cardLower.includes('play for free') || cardLower.includes('free weekend')) continue;
+      if (cardLower.includes('potentially upcoming')) continue;
+
+      seen.add(appId);
+
+      let name = null;
+      const lines = cardText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const skipPatterns = /^(free to keep|play for free|free weekend|view store|install|started|expires|ends|in \d|today|tomorrow|\d{1,2}\s+\w+\s+\d{4})/i;
+      for (const line of lines) {
+        if (line.match(/^https?:\/\//)) continue;
+        if (line.match(skipPatterns)) continue;
+        if (line.length >= 2 && line.length <= 200) {
+          name = line;
+          break;
         }
       }
-      if (!name || name.length < 2) {
-        name = `App ${appId}`;
-      }
+      if (!name) name = `App ${appId}`;
 
       let endDate = null;
-      const textLines = cardText.split('\n');
-      for (const line of textLines) {
+      for (const line of lines) {
         const lineLower = line.toLowerCase();
         if (lineLower.includes('expires') || lineLower.includes('ends')) {
-          const fullDateMatch = line.match(/(\d{1,2}\s+\w+\s+\d{4})\s*[\u2013\u2014\-\u2015\u00ad–—]*\s*([\d:]+\s*UTC)/);
-          if (fullDateMatch) {
-            endDate = `${fullDateMatch[1]} ${fullDateMatch[2]}`;
-            break;
-          }
+          const fullMatch = line.match(/(\d{1,2}\s+\w+\s+\d{4})\s*[\u2013\u2014\-\u2015–—]*\s*([\d:]+\s*UTC)/);
+          if (fullMatch) { endDate = `${fullMatch[1]} ${fullMatch[2]}`; break; }
           const dateMatch = line.match(/(\d{1,2}\s+\w+\s+\d{4})/);
-          if (dateMatch) {
-            endDate = dateMatch[1];
-            break;
-          }
-          const relativeMatch = line.match(/(in\s+\d+\s+\w+|tomorrow|today)/i);
-          if (relativeMatch) {
-            endDate = relativeMatch[1];
-            break;
-          }
+          if (dateMatch) { endDate = dateMatch[1]; break; }
+          const relMatch = line.match(/(in\s+\d+\s+\w+|tomorrow|today)/i);
+          if (relMatch) { endDate = relMatch[1]; break; }
         }
       }
 
-      if (!results.some(g => g.appId === appId)) {
-        results.push({
-          appId,
-          name,
-          url: `https://store.steampowered.com/app/${appId}/`,
-          endDate,
-        });
-      }
+      games.push({
+        appId,
+        name,
+        url: `https://store.steampowered.com/app/${appId}/`,
+        endDate,
+      });
+    } catch (e) {
+      if (cfg.debug) console.error('Error parsing SteamDB entry:', e.message);
     }
-
-    return results;
-  });
+  }
 
   console.log(`Found ${games.length} free-to-keep promotion(s) on SteamDB`);
   return games;
