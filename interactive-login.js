@@ -211,11 +211,11 @@ async function checkSiteStatus(siteId) {
   let context;
   try {
     context = await chromium.launchPersistentContext(site.browserDir, {
-      headless: 'new',
+      headless: true,
       viewport: { width: 1280, height: 720 },
       locale: 'en-US',
       handleSIGINT: false,
-      args: ['--hide-crash-restore-bubble', '--no-sandbox', '--disable-gpu'],
+      args: ['--hide-crash-restore-bubble', '--no-sandbox', '--disable-gpu', '--headless=new'],
     });
 
     const page = context.pages()[0] || await context.newPage();
