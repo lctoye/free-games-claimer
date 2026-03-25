@@ -42,4 +42,13 @@ if [ "$LOGIN_MODE" = "1" ]; then
   exec tini -g -- node interactive-login.js
 fi
 
-exec tini -g -- "$@" # https://github.com/krallin/tini/issues/8 node/playwright respond to signals like ctrl-c, but unsure about zombie processes
+if [ -n "$LOOP" ]; then
+  echo "LOOP=${LOOP}: Will repeat every ${LOOP} seconds."
+  while true; do
+    tini -g -- "$@" || true
+    echo "Sleeping for ${LOOP} seconds..."
+    sleep "$LOOP"
+  done
+else
+  exec tini -g -- "$@" # https://github.com/krallin/tini/issues/8 node/playwright respond to signals like ctrl-c, but unsure about zombie processes
+fi

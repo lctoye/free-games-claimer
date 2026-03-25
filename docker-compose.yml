@@ -19,3 +19,4 @@ services:
       # - EMAIL=foo@bar.org
       # - NOTIFY='tgram://...'
       # - LOGIN_MODE=1 # launch interactive login panel on port 7080 instead of automated claiming
+      # - LOOP=28800 # repeat claiming every N seconds (e.g., 28800 = 8 hours); omit to run once and exit

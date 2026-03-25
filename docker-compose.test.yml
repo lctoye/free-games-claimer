@@ -18,13 +18,13 @@ services:
       - GOG_EMAIL=${GMAIL}
       - GOG_PASSWORD=${GOG_PASSWORD}
       - LOGIN_MODE=${LOGIN_MODE:-0}
+      - LOOP=${LOOP:-}
     volumes:
       - fgc-test:/fgc/data
     ports:
       - "6080:6080"
       - "7080:7080"
     restart: unless-stopped
-    command: bash -c "node prime-gaming; node epic-games; node gog; echo sleeping; sleep 1d"
 
 volumes:
   fgc-test:

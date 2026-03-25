@@ -25,7 +25,6 @@
     "chalk": "^5.4.1",
     "dotenv": "^17.2.0",
     "enquirer": "^2.4.1",
-    "fingerprint-injector": "^2.1.81",
     "lowdb": "^7.0.1",
     "otplib": "^12.0.1",
     "patchright": "^1.58.2"
