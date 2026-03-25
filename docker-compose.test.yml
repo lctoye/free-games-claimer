@@ -18,7 +18,7 @@ services:
       - GOG_EMAIL=${GMAIL}
       - GOG_PASSWORD=${GOG_PASSWORD}
       - LOGIN_MODE=${LOGIN_MODE:-0}
-      - LOOP=${LOOP:-}
+      - LOOP=${LOOP:-86400}
     volumes:
       - fgc-test:/fgc/data
     ports:
