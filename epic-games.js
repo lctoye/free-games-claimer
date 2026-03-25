@@ -160,13 +160,17 @@ try {
 
   log.status('Free games found', urls.length);
   if (cfg.debug) console.log('  URLs:', urls);
+  const loggedTitles = new Set();
 
   for (const url of urls) {
     if (cfg.time) console.time('claim game');
     const skipId = url.split('/').pop();
     if (db.data[user][skipId]?.status == 'claimed') {
       const knownTitle = db.data[user][skipId]?.title || skipId;
-      log.ok(`${knownTitle} — already claimed`);
+      if (!loggedTitles.has(knownTitle)) {
+        log.ok(`${knownTitle} — already claimed`);
+        loggedTitles.add(knownTitle);
+      }
       if (cfg.time) console.timeEnd('claim game');
       continue;
     }
