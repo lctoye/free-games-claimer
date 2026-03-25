@@ -87,8 +87,10 @@ ENV NOW=${NOW}
 # Configure VNC via environment variables:
 ENV VNC_PORT=5900
 ENV NOVNC_PORT=6080
+ENV PANEL_PORT=7080
 EXPOSE 5900
 EXPOSE 6080
+EXPOSE 7080
 
 # Configure Xvfb via environment variables:
 ENV WIDTH=1920
@@ -104,4 +106,4 @@ HEALTHCHECK --interval=5s --timeout=5s CMD pgrep node && curl --fail http://loca
 # Script to setup display server & VNC is always executed.
 ENTRYPOINT ["docker-entrypoint.sh"]
 # Default command to run. This is replaced by appending own command, e.g. `docker run ... node prime-gaming` to only run this script.
-CMD node epic-games; node prime-gaming; node gog
+CMD node prime-gaming; node epic-games; node gog

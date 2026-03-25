@@ -36,4 +36,10 @@ echo "TurboVNC is running on port $VNC_PORT ($pwt) with resolution ${WIDTH}x${HE
 websockify -D --web "/usr/share/novnc/" "$NOVNC_PORT" "localhost:$VNC_PORT" 2>/dev/null 1>&2 &
 echo "noVNC (VNC via browser) is running on http://localhost:$NOVNC_PORT/?autoconnect=true"
 echo
+
+if [ "$LOGIN_MODE" = "1" ]; then
+  echo "LOGIN_MODE=1: Starting interactive login panel on port ${PANEL_PORT:-7080}..."
+  exec tini -g -- node interactive-login.js
+fi
+
 exec tini -g -- "$@" # https://github.com/krallin/tini/issues/8 node/playwright respond to signals like ctrl-c, but unsure about zombie processes

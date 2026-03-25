@@ -20,6 +20,7 @@ export const cfg = {
   height: Number(process.env.HEIGHT) || 1080, // height of the opened browser
   timeout: (Number(process.env.TIMEOUT) || 60) * 1000, // default timeout for playwright is 30s
   login_timeout: (Number(process.env.LOGIN_TIMEOUT) || 180) * 1000, // higher timeout for login, will wait twice: prompt + wait for manual login
+  login_mode: process.env.LOGIN_MODE == '1', // launch interactive VNC login panel instead of automated claiming
   novnc_port: process.env.NOVNC_PORT, // running in docker if set
   notify: process.env.NOTIFY, // apprise notification services
   notify_title: process.env.NOTIFY_TITLE, // apprise notification title
@@ -43,11 +44,7 @@ export const cfg = {
   gog_email: process.env.GOG_EMAIL || process.env.EMAIL,
   gog_password: process.env.GOG_PASSWORD || process.env.PASSWORD,
   gog_newsletter: process.env.GOG_NEWSLETTER == '1', // do not unsubscribe from newsletter after claiming a game
-  // auth AliExpress
-  ae_email: process.env.AE_EMAIL || process.env.EMAIL,
-  ae_password: process.env.AE_PASSWORD || process.env.PASSWORD,
-  // OTP only via GOG_EMAIL, can't add app...
-  // experimmental
+  // experimental
   pg_redeem: process.env.PG_REDEEM == '1', // prime-gaming: redeem keys on external stores
   lg_email: process.env.LG_EMAIL || process.env.PG_EMAIL || process.env.EMAIL, // prime-gaming: external: legacy-games: email to use for redeeming
   pg_claimdlc: process.env.PG_CLAIMDLC == '1', // prime-gaming: claim in-game content

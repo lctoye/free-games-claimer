@@ -1,4 +1,3 @@
-// import { chromium } from 'playwright-chromium';
 import { chromium } from 'patchright';
 import { authenticator } from 'otplib';
 import chalk from 'chalk';
@@ -62,7 +61,7 @@ try {
       await page.click('input[type="submit"]');
       page.waitForURL('**/ap/signin**').then(async () => { // check for wrong credentials
         const error = await page.locator('.a-alert-content').first().innerText();
-        if (!error.trim.length) return;
+        if (!error.trim().length) return;
         console.error('Login error:', error);
         await notify(`prime-gaming: login: ${error}`);
         await context.close(); // finishes potential recording
@@ -439,11 +438,11 @@ try {
   process.exitCode ||= 1;
   console.error('--- Exception:');
   console.error(error); // .toString()?
-  if (error.message && process.exitCode != 130) notify(`prime-gaming failed: ${error.message.split('\n')[0]}`);
+  if (error.message && process.exitCode != 130) await notify(`prime-gaming failed: ${error.message.split('\n')[0]}`);
 } finally {
   await db.write(); // write out json db
   if (notify_games.length) { // list should only include claimed games
-    notify(`prime-gaming (${user}):<br>${html_game_list(notify_games)}`);
+    await notify(`prime-gaming (${user}):<br>${html_game_list(notify_games)}`);
   }
 }
 if (page.video()) console.log('Recorded video:', await page.video().path());

@@ -1,4 +1,3 @@
-// import { chromium } from 'playwright-chromium';
 import { chromium } from 'patchright';
 import { authenticator } from 'otplib';
 import chalk from 'chalk';
@@ -333,12 +332,12 @@ try {
   process.exitCode ||= 1;
   console.error('--- Exception:');
   console.error(error); // .toString()?
-  if (error.message && process.exitCode != 130) notify(`epic-games failed: ${error.message.split('\n')[0]}`);
+  if (error.message && process.exitCode != 130) await notify(`epic-games failed: ${error.message.split('\n')[0]}`);
 } finally {
   if (cfg.time) console.timeEnd('claim all games');
   await db.write(); // write out json db
   if (notify_games.filter(g => g.status == 'claimed' || g.status == 'failed').length) { // don't notify if all have status 'existed', 'manual', 'requires base game', 'unavailable-in-region', 'skipped'
-    notify(`epic-games (${user}):<br>${html_game_list(notify_games)}`);
+    await notify(`epic-games (${user}):<br>${html_game_list(notify_games)}`);
   }
 }
 if (cfg.debug) writeFileSync(path.resolve(cfg.dir.browser, 'cookies.json'), JSON.stringify(await context.cookies()));

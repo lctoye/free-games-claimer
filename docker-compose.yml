@@ -11,9 +11,11 @@ services:
     ports:
       # - "5900:5900" # VNC server
       - "6080:6080" # noVNC (browser-based VNC client)
+      - "7080:7080" # interactive login panel (LOGIN_MODE=1)
     volumes:
       - fgc:/fgc/data
     # command: bash -c "node epic-games; node gog"
     environment:
       # - EMAIL=foo@bar.org
       # - NOTIFY='tgram://...'
+      # - LOGIN_MODE=1 # launch interactive login panel on port 7080 instead of automated claiming

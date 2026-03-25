@@ -14,7 +14,7 @@ Includes an interactive VNC login mode for establishing browser sessions manuall
 - `gog.js` - GOG claimer
 - `interactive-login.js` - Web-based VNC login control panel (Docker-only, launched with LOGIN_MODE=1)
 - `run.sh` - Launcher script that sets LD_LIBRARY_PATH for patchright's Chromium and execs `node`
-- `src/util.js` - Shared utilities (DB, notifications, prompts, file helpers, launchChromium, handleSIGINT)
+- `src/util.js` - Shared utilities (DB, notifications, prompts, file helpers, handleSIGINT)
 - `src/config.js` - Configuration via environment variables
 - `src/epic-games-mobile.js` - Epic Games mobile games helper
 - `data/` - Runtime data (browser profiles, JSON databases, screenshots)
