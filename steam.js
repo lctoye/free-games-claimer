@@ -191,14 +191,19 @@ async function discoverFreeGames(p) {
       const headings = card.querySelectorAll('h1, h2, h3, h4, h5, h6');
       for (const h of headings) {
         const t = h.innerText.trim();
-        if (t.length >= 2) {
+        if (t.length >= 2 && !t.match(/^https?:\/\//)) {
           name = t;
           break;
         }
       }
       if (!name || name.length < 2) {
         const subLink = card.querySelector('a[href*="steamdb.info/sub/"], a[href*="steamdb.info/app/"]');
-        if (subLink) name = subLink.innerText.trim();
+        if (subLink) {
+          const linkText = subLink.innerText.trim();
+          if (linkText.length >= 2 && !linkText.match(/^https?:\/\//)) {
+            name = linkText;
+          }
+        }
       }
       if (!name || name.length < 2) {
         name = `App ${appId}`;
