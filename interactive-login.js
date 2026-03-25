@@ -496,6 +496,7 @@ function render() {
     let cls = 'step';
     if (num < currentStep) cls += ' done';
     else if (num === currentStep) cls += ' active';
+    if (num === 4 && state.allLoggedIn) cls += ' done';
     return (i > 0 ? '<span class="step-arrow">&rarr;</span>' : '') + '<span class="' + cls + '">' + num + '. ' + label + '</span>';
   }).join('');
 
