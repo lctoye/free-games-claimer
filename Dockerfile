@@ -106,4 +106,4 @@ HEALTHCHECK --interval=5s --timeout=5s CMD pgrep node && curl --fail http://loca
 # Script to setup display server & VNC is always executed.
 ENTRYPOINT ["docker-entrypoint.sh"]
 # Default command to run. This is replaced by appending own command, e.g. `docker run ... node prime-gaming` to only run this script.
-CMD node prime-gaming; node epic-games; node gog
+CMD node prime-gaming; node epic-games; node gog; node steam

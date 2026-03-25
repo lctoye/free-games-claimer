@@ -14,9 +14,11 @@ services:
       - "7080:7080" # interactive login panel (LOGIN_MODE=1)
     volumes:
       - fgc:/fgc/data
-    # command: bash -c "node epic-games; node gog"
+    # command: bash -c "node epic-games; node gog; node steam"
     environment:
       # - EMAIL=foo@bar.org
       # - NOTIFY='tgram://...'
       # - LOGIN_MODE=1 # launch interactive login panel on port 7080 instead of automated claiming
       # - LOOP=28800 # repeat claiming every N seconds (e.g., 28800 = 8 hours); omit to run once and exit
+      # - STEAM_MIN_RATING=6 # minimum review rating 1-9 (6 = Mostly Positive)
+      # - STEAM_MIN_PRICE=10 # minimum original price in USD

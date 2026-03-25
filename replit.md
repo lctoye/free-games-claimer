@@ -5,6 +5,7 @@ A Node.js CLI automation tool that uses patchright (Chromium) to automatically c
 - Amazon Luna (formerly Prime Gaming) - `luna.amazon.com/claims`
 - Epic Games Store - `store.epicgames.com` (requires initial manual session)
 - GOG - `gog.com`
+- Steam - `store.steampowered.com` (free-to-keep promotions only, with quality filtering)
 
 Includes an interactive VNC login mode for establishing browser sessions manually (solving captchas, MFA, etc.) via a web-based control panel.
 
@@ -12,6 +13,7 @@ Includes an interactive VNC login mode for establishing browser sessions manuall
 - `prime-gaming.js` - Amazon Luna/Prime Gaming claimer
 - `epic-games.js` - Epic Games Store claimer
 - `gog.js` - GOG claimer
+- `steam.js` - Steam free-to-keep game claimer (100% off promotions with rating/price filtering)
 - `interactive-login.js` - Web-based VNC login control panel (Docker-only, launched with LOGIN_MODE=1)
 - `run.sh` - Launcher script that sets LD_LIBRARY_PATH for patchright's Chromium and execs `node`
 - `src/util.js` - Shared utilities (DB, notifications, prompts, file helpers, handleSIGINT)
@@ -30,6 +32,9 @@ All configuration is done via environment variables. Key variables:
 - `EG_EMAIL`, `EG_PASSWORD`, `EG_OTPKEY` - Epic Games credentials
 - `PG_EMAIL`, `PG_PASSWORD`, `PG_OTPKEY` - Prime Gaming/Luna credentials
 - `GOG_EMAIL`, `GOG_PASSWORD` - GOG credentials
+- `STEAM_EMAIL`, `STEAM_PASSWORD` - Steam credentials
+- `STEAM_MIN_RATING` - Minimum review rating 1-9 (default: 6 = Mostly Positive)
+- `STEAM_MIN_PRICE` - Minimum original price in USD (default: 10)
 - `NOTIFY` - Apprise notification URL (Pushover)
 - `NOTIFY_TITLE` - Notification title
 - `PG_REDEEM=1` - Auto-redeem GOG/Xbox/Legacy codes from Prime Gaming
@@ -47,7 +52,7 @@ Set `LOGIN_MODE=1` in Docker to launch a web-based control panel instead of the 
 - Control panel runs on port 7080 (configurable via `PANEL_PORT`)
 - Password protected via `PANEL_PASSWORD` or `VNC_PASSWORD` env vars
 - Embeds noVNC viewer to show the Playwright browser on the Xvfb display
-- Three site buttons: Prime Gaming, Epic Games, GOG
+- Four site buttons: Prime Gaming, Epic Games, GOG, Steam
 - Click "Login" to launch a visible browser navigated to the site's login page
 - Log in manually through noVNC (handle captchas, MFA, phone verification, etc.)
 - Click "I'm Logged In" to verify the session and save the persistent browser profile
@@ -62,8 +67,8 @@ Set `LOGIN_MODE=1` in Docker to launch a web-based control panel instead of the 
 - **Notifications**: apprise (Python) for Pushover
 
 ## Workflow
-- **Start application**: `bash -c 'bash run.sh prime-gaming.js; bash run.sh epic-games.js; bash run.sh gog.js; echo sleeping; sleep 1d'`
-  - Runs sequentially: Prime Gaming → Epic Games → GOG → sleep 24h
+- **Start application**: `bash -c 'bash run.sh prime-gaming.js; bash run.sh epic-games.js; bash run.sh gog.js; bash run.sh steam.js; echo sleeping; sleep 1d'`
+  - Runs sequentially: Prime Gaming → Epic Games → GOG → Steam → sleep 24h
   - Each script launched via `run.sh` which sets LD_LIBRARY_PATH for Chromium's libgbm
 
 ## Environment Variables (configured)

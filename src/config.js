@@ -44,6 +44,11 @@ export const cfg = {
   gog_email: process.env.GOG_EMAIL || process.env.EMAIL,
   gog_password: process.env.GOG_PASSWORD || process.env.PASSWORD,
   gog_newsletter: process.env.GOG_NEWSLETTER == '1', // do not unsubscribe from newsletter after claiming a game
+  // auth steam
+  steam_email: process.env.STEAM_EMAIL || process.env.EMAIL,
+  steam_password: process.env.STEAM_PASSWORD || process.env.PASSWORD,
+  steam_min_rating: Number(process.env.STEAM_MIN_RATING ?? 6), // minimum review rating on 1-9 scale (6 = Mostly Positive)
+  steam_min_price: Number(process.env.STEAM_MIN_PRICE ?? 10), // minimum original price in USD to filter out cheap/shovelware games
   // experimental
   pg_redeem: process.env.PG_REDEEM == '1', // prime-gaming: redeem keys on external stores
   lg_email: process.env.LG_EMAIL || process.env.PG_EMAIL || process.env.EMAIL, // prime-gaming: external: legacy-games: email to use for redeeming

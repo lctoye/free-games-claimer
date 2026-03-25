@@ -106,6 +106,44 @@ A web-based control panel for establishing browser sessions manually. Designed f
 
 ---
 
+## Task #5: Steam Free-to-Keep Game Claimer
+
+### New file: `steam.js`
+Automatically discovers and claims temporarily free games on Steam (100% off promotions for normally-paid games). Does NOT claim permanently free-to-play games or free weekend trials.
+
+### Discovery
+- Searches Steam store for games with 100% discount (`/search/?maxprice=free&specials=1`)
+- Parses search results for title, original price, discount percentage, and review rating
+
+### Quality filtering
+- `STEAM_MIN_RATING` (default: 6 = Mostly Positive) — Rating scale 1-9:
+  - 9: Overwhelmingly Positive, 8: Very Positive, 7: Positive, 6: Mostly Positive
+  - 5: Mixed, 4: Mostly Negative, 3: Negative, 2: Very Negative, 1: Overwhelmingly Negative
+- `STEAM_MIN_PRICE` (default: 10 = $10 USD) — Minimum original price to filter out cheap/shovelware titles
+- Games with no rating AND no price data are skipped (cannot verify quality)
+
+### Claiming flow
+- Navigates to each game's store page
+- Handles Steam age verification gates (date-of-birth selector)
+- Clicks "Add to Account" button
+- Verifies claim by checking for success message or "already owned" indicator
+- Tracks all results in `data/steam.json`
+
+### Login
+- Uses `STEAM_EMAIL` / `STEAM_PASSWORD` environment variables (falls back to `EMAIL` / `PASSWORD`)
+- Handles Steam Guard two-factor authentication (5-character code input)
+- Supports manual browser login via VNC (same pattern as other claimers)
+
+### Integration
+- `src/config.js`: Added `steam_email`, `steam_password`, `steam_min_rating`, `steam_min_price`
+- `interactive-login.js`: Added Steam as 4th site with login check, login URL, and session verification
+- `Dockerfile`: Added `node steam` to default CMD
+- `docker-compose.yml`: Added `STEAM_MIN_RATING` and `STEAM_MIN_PRICE` documentation
+- `docker-compose.test.yml`: Added `STEAM_EMAIL`, `STEAM_PASSWORD`, `STEAM_MIN_RATING`, `STEAM_MIN_PRICE`
+- `run.sh` / Replit workflow: Added `bash run.sh steam.js` to the execution chain
+
+---
+
 ## Summary of All Changed Files
 
 | File | Changes |
@@ -113,13 +151,15 @@ A web-based control panel for establishing browser sessions manually. Designed f
 | `prime-gaming.js` | Patchright import, login bug fix, awaited notify() |
 | `epic-games.js` | Patchright import, awaited notify() |
 | `gog.js` | Patchright import, awaited notify() |
-| `interactive-login.js` | **New file** — interactive VNC login panel |
+| `steam.js` | **New file** — Steam free-to-keep game claimer with quality filtering |
+| `interactive-login.js` | **New file** — interactive VNC login panel; added Steam as 4th site |
 | `src/util.js` | Removed stealth() and launchChromium() |
-| `src/config.js` | Removed AliExpress config, added login_mode |
+| `src/config.js` | Removed AliExpress config, added login_mode, added Steam config |
 | `src/epic-games-mobile.js` | New from dev branch — mobile game claiming |
-| `Dockerfile` | Patchright, PANEL_PORT/EXPOSE 7080, CMD order |
-| `docker-compose.yml` | Port 7080, LOGIN_MODE docs |
-| `docker-entrypoint.sh` | LOGIN_MODE=1 check |
+| `Dockerfile` | Patchright, PANEL_PORT/EXPOSE 7080, CMD order, added `node steam` |
+| `docker-compose.yml` | Port 7080, LOGIN_MODE docs, Steam config docs |
+| `docker-compose.test.yml` | Added Steam environment variables |
+| `docker-entrypoint.sh` | LOGIN_MODE=1 check, LOOP scheduling |
 | `package.json` | Patchright dep, docker port 7080 |
 | `run.sh` | **New file** — Nix/Replit Chromium launcher |
 | `scripts/post-merge.sh` | **New file** — post-merge setup |

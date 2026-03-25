@@ -124,6 +124,27 @@ const SITES = {
       }
     },
   },
+  'steam': {
+    name: 'Steam',
+    loginUrl: 'https://store.steampowered.com/login/',
+    browserDir: cfg.dir.browser,
+    async checkLogin(page) {
+      try {
+        await page.goto('https://store.steampowered.com/', { waitUntil: 'domcontentloaded', timeout: 20000 });
+        await page.waitForTimeout(3000);
+        const pulldown = page.locator('#account_pulldown');
+        if (await pulldown.count() > 0) {
+          const user = (await pulldown.innerText()).trim();
+          if (user.length > 0) {
+            return { loggedIn: true, user };
+          }
+        }
+        return { loggedIn: false };
+      } catch (_) {
+        return { loggedIn: false };
+      }
+    },
+  },
 };
 
 let activeBrowser = null;
@@ -264,7 +285,7 @@ function runAllScripts() {
   runStatus = 'running';
   console.log(`[${datetime()}] Starting all claiming scripts...`);
 
-  const child = spawn('bash', ['-c', 'node prime-gaming.js; node epic-games.js; node gog.js'], {
+  const child = spawn('bash', ['-c', 'node prime-gaming.js; node epic-games.js; node gog.js; node steam.js'], {
     cwd: process.cwd(),
     env: process.env,
     stdio: ['ignore', 'pipe', 'pipe'],
