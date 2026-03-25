@@ -88,6 +88,24 @@ A web-based control panel for establishing browser sessions manually. Designed f
 
 ---
 
+## GOG Selector Fix
+
+### Problem
+- `gog.js` timed out waiting for `#menuUsername` selector (60s timeout)
+- GOG appears to have changed their page structure — the `#menuUsername` element is no longer reliably present
+- The `while` loop condition `signIn.isVisible() && !username.isVisible()` would evaluate to `false` when neither element existed, skipping the login flow entirely and then crashing at username detection
+
+### Fix
+- Login detection loop changed from `while (signIn visible AND username not visible)` to `while (username not visible)` with fallback: if no sign-in button either, check for account-related links as a secondary logged-in indicator
+- Username selector broadened: `#menuUsername, .menu-username, [ng-click*="account"]`
+- Username reading wrapped in try/catch with 10s timeout — falls back to `'unknown'` if element exists but text can't be read, or throws a clear error if no login indicators found at all
+- Added 3s wait after page load to let GOG's Angular app hydrate before checking selectors
+
+### Files changed
+- `gog.js`: Lines 50-122 (login detection and username reading)
+
+---
+
 ## Summary of All Changed Files
 
 | File | Changes |
