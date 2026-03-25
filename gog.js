@@ -151,12 +151,12 @@ try {
     let status;
     if (response == '{}') {
       status = 'claimed';
-      log.ok(`${title} - claimed!`);
+      log.ok(`${title} — claimed!`);
     } else {
       const message = JSON.parse(response).message;
       if (message == 'Already claimed') {
         status = 'existed';
-        log.ok(`${title} - already in library`);
+        log.ok(`${title} — already in library`);
       } else {
         log.warn(`${title} - ${message}`);
         status = message;

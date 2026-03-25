@@ -302,15 +302,7 @@ try {
 
   const freeGames = await discoverFreeGames(page);
 
-  if (freeGames.length === 0) {
-    log.ok('No free-to-keep promotions right now');
-  } else {
-    log.status('Promotions found', freeGames.length);
-    for (const g of freeGames) {
-      const endStr = g.endDate ? `ends ${g.endDate}` : '';
-      log.game(g.name, `app ${g.appId}${endStr ? ' - ' + endStr : ''}`);
-    }
-  }
+  log.status('Promotions found', freeGames.length);
 
   let claimed = 0;
   let skipped = 0;
@@ -319,17 +311,19 @@ try {
     const appId = game.appId;
 
     if (db.data[user][appId]?.status === 'claimed' || db.data[user][appId]?.status === 'existed') {
-      log.skip(game.name, `already ${db.data[user][appId].status}`);
+      const knownTitle = db.data[user][appId]?.title || game.name;
+      log.ok(`${knownTitle} — already ${db.data[user][appId].status}`);
       continue;
     }
 
     const details = await getGameDetails(page, game.url);
     const title = details.title || game.name;
+    const endStr = game.endDate ? ` (ends ${game.endDate})` : '';
 
     db.data[user][appId] ||= { title, time: datetime(), url: game.url };
 
     if (details.alreadyOwned) {
-      log.game(title, 'already in library');
+      log.ok(`${title} — already in library`);
       db.data[user][appId].status ||= 'existed';
       notify_games.push({ title, url: game.url, status: 'existed' });
       continue;
@@ -348,25 +342,27 @@ try {
     }
 
     if (details.rating < cfg.steam_min_rating) {
-      log.skip(title, `rating ${details.rating}/9 (${details.ratingText}) < min ${cfg.steam_min_rating}`);
+      log.skip(title, `rating ${details.rating}/9 (${details.ratingText}) below min ${cfg.steam_min_rating}`);
       skipped++;
       continue;
     }
 
     if (details.originalPrice !== null && details.originalPrice < cfg.steam_min_price) {
-      log.skip(title, `price $${details.originalPrice} < min $${cfg.steam_min_price}`);
+      log.skip(title, `price $${details.originalPrice} below min $${cfg.steam_min_price}`);
       skipped++;
       continue;
     }
 
+    log.game(title, `free-to-keep${endStr}`);
+
     if (cfg.dryrun) {
-      log.warn(`${title} - dry run, skipping claim`);
+      log.warn(`dry run, skipping claim`);
       notify_games.push({ title, url: game.url, status: 'skipped' });
       continue;
     }
 
     if (!details.canClaim) {
-      log.fail(`${title} - no "Add to Account" button`);
+      log.fail(`no "Add to Account" button found`);
       db.data[user][appId].status = 'failed: no claim button';
       notify_games.push({ title, url: game.url, status: 'failed: no claim button' });
       continue;
@@ -401,13 +397,13 @@ try {
       }
 
       if (success) {
-        log.ok(`${title} - claimed!`);
+        log.ok(`${title} — claimed!`);
         db.data[user][appId].status = 'claimed';
         db.data[user][appId].time = datetime();
         notify_games.push({ title, url: game.url, status: 'claimed' });
         claimed++;
       } else {
-        log.fail(`${title} - could not verify claim`);
+        log.fail(`${title} — could not verify claim`);
         db.data[user][appId].status = 'failed';
         notify_games.push({ title, url: game.url, status: 'failed' });
       }

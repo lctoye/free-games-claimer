@@ -163,8 +163,10 @@ try {
 
   for (const url of urls) {
     if (cfg.time) console.time('claim game');
-    if (db.data[user][url.split('/').pop()]?.status == 'claimed') {
-      log.skip(url.split('/').pop(), 'already claimed');
+    const skipId = url.split('/').pop();
+    if (db.data[user][skipId]?.status == 'claimed') {
+      const knownTitle = db.data[user][skipId]?.title || skipId;
+      log.ok(`${knownTitle} — already claimed`);
       if (cfg.time) console.timeEnd('claim game');
       continue;
     }
@@ -212,13 +214,12 @@ try {
     const game_id = page.url().split('/').pop();
     const existedInDb = db.data[user][game_id];
     db.data[user][game_id] ||= { title, time: datetime(), url: page.url() }; // this will be set on the initial run only!
-    log.game(title, 'checking');
-    if (bundle_includes) console.log('  This bundle includes:', bundle_includes);
+    if (bundle_includes) console.log(`  ${title} includes: ${bundle_includes.join(', ')}`);
     const notify_game = { title, url, status: 'failed' };
     notify_games.push(notify_game); // status is updated below
 
     if (btnText == 'in library') {
-      log.ok(`${title} - already in library`);
+      log.ok(`${title} — already in library`);
       if (!existedInDb) await notify(`Game already in library: ${url}`);
       notify_game.status = 'existed';
       db.data[user][game_id].status ||= 'existed'; // does not overwrite claimed or failed
@@ -313,7 +314,7 @@ try {
         await page.locator('text=Thanks for your order!').waitFor({ state: 'attached' }); // TODO Bundle: got stuck here, but normal game now as well
         db.data[user][game_id].status = 'claimed';
         db.data[user][game_id].time = datetime(); // claimed time overwrites failed/dryrun time
-        log.ok(`${title} - claimed!`);
+        log.ok(`${title} — claimed!`);
         // context.setDefaultTimeout(cfg.timeout);
       } catch (e) {
         console.log(e);
