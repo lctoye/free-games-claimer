@@ -153,7 +153,7 @@ try {
   // Free mobile games - https://github.com/vogler/free-games-claimer/issues/474
   // https://egs-platform-service.store.epicgames.com/api/v2/public/discover/home?count=10&country=DE&locale=en&platform=android&start=0&store=EGS
   if (cfg.eg_mobile) {
-    console.log('Including mobile games...');
+    log.status('Mobile games', 'included');
     const mobileGames = await getMobileGames(context);
     urls.push(...mobileGames.map(x => x.url));
   }
@@ -164,7 +164,7 @@ try {
   for (const url of urls) {
     if (cfg.time) console.time('claim game');
     if (db.data[user][url.split('/').pop()]?.status == 'claimed') {
-      console.log('Already claimed, skipping:', url);
+      log.skip(url.split('/').pop(), 'already claimed');
       if (cfg.time) console.timeEnd('claim game');
       continue;
     }

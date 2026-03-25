@@ -144,7 +144,7 @@ async function getGameDetails(p, url) {
 }
 
 async function discoverFreeGames(p) {
-  console.log('Checking SteamDB for free-to-keep promotions...');
+  log.status('Source', 'SteamDB (steamdb.info/upcoming/free)');
 
   await p.goto(URL_STEAMDB_FREE, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(5000);
@@ -223,7 +223,7 @@ async function discoverFreeGames(p) {
     }
   }
 
-  console.log(`Found ${games.length} free-to-keep promotion(s) on SteamDB`);
+  if (cfg.debug) console.log(`  Found ${games.length} free-to-keep promotion(s) on SteamDB`);
   return games;
 }
 
@@ -303,12 +303,12 @@ try {
   const freeGames = await discoverFreeGames(page);
 
   if (freeGames.length === 0) {
-    log.ok('No free-to-keep promotions on SteamDB right now');
+    log.ok('No free-to-keep promotions right now');
   } else {
-    console.log(`  Found ${freeGames.length} free-to-keep promotion(s):`);
+    log.status('Promotions found', freeGames.length);
     for (const g of freeGames) {
       const endStr = g.endDate ? `ends ${g.endDate}` : '';
-      console.log(`    ${chalk.blue(g.name)} (app ${g.appId})${endStr ? ' - ' + endStr : ''}`);
+      log.game(g.name, `app ${g.appId}${endStr ? ' - ' + endStr : ''}`);
     }
   }
 

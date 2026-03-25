@@ -55,7 +55,7 @@ if [ "$LOGIN_MODE" = "1" ]; then
 fi
 
 if [ -n "$LOOP" ]; then
-  echo "LOOP=${LOOP}: Will repeat every ${LOOP} seconds."
+  echo "  Loop:    every ${LOOP}s"
   while true; do
     tini -g -- "$@" || true
     echo "Sleeping for ${LOOP} seconds..."
