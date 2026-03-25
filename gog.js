@@ -126,7 +126,7 @@ try {
   const banner = page.locator('#giveaway');
   await page.waitForTimeout(2000); // TODO patchright sometimes missed banner otherwise
   if (!await banner.count()) {
-    log.ok('No free giveaway right now');
+    log.info('No free giveaway right now');
   } else {
     const text = await page.locator('.giveaway__content-header').innerText();
     const match_all = text.match(/Claim (.*) and don't miss the|Success! (.*) was added to/);

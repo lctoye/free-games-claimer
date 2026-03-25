@@ -91,17 +91,20 @@ export const log = {
   status: (label, value) => {
     console.log(`  ${label}: ${value}`);
   },
-  game: (name, status) => {
-    console.log(`  ${chalk.blue(name)} ${chalk.dim('→')} ${status}`);
-  },
-  skip: (name, reason) => {
-    console.log(`  ${chalk.dim(name)} ${chalk.dim('→')} ${chalk.yellow(reason)}`);
-  },
-  ok: (msg) => {
+  info: (msg) => {
     console.log(`  ${chalk.green('✓')} ${msg}`);
   },
+  game: (name, status) => {
+    console.log(`    ${chalk.blue(name)} ${chalk.dim('→')} ${status}`);
+  },
+  skip: (name, reason) => {
+    console.log(`    ${chalk.red('✗')} ${chalk.dim(name)} — ${chalk.yellow(reason)}`);
+  },
+  ok: (msg) => {
+    console.log(`    ${chalk.green('✓')} ${msg}`);
+  },
   warn: (msg) => {
-    console.log(`  ${chalk.yellow('!')} ${msg}`);
+    console.log(`    ${chalk.yellow('!')} ${msg}`);
   },
   fail: (msg) => {
     console.log(`  ${chalk.red('✗')} ${msg}`);

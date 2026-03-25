@@ -158,7 +158,18 @@ try {
     urls.push(...mobileGames.map(x => x.url));
   }
 
-  log.status('Free games found', urls.length);
+  const titleCounts = {};
+  for (const url of urls) {
+    const id = url.split('/').pop();
+    const t = db.data[user][id]?.title || id;
+    titleCounts[t] = (titleCounts[t] || 0) + 1;
+  }
+  const uniqueCount = Object.keys(titleCounts).length;
+  if (uniqueCount < urls.length) {
+    log.status('Free games found', `${uniqueCount} (${urls.length} incl. platform variants)`);
+  } else {
+    log.status('Free games found', urls.length);
+  }
   if (cfg.debug) console.log('  URLs:', urls);
   const loggedTitles = new Set();
 
@@ -168,7 +179,9 @@ try {
     if (db.data[user][skipId]?.status == 'claimed') {
       const knownTitle = db.data[user][skipId]?.title || skipId;
       if (!loggedTitles.has(knownTitle)) {
-        log.ok(`${knownTitle} — already claimed`);
+        const platforms = titleCounts[knownTitle] || 1;
+        const platformNote = platforms > 1 ? ` (${platforms} platforms)` : '';
+        log.ok(`${knownTitle} — already claimed${platformNote}`);
         loggedTitles.add(knownTitle);
       }
       if (cfg.time) console.timeEnd('claim game');
