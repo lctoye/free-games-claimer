@@ -363,7 +363,7 @@ try {
     if (!details.canClaim) {
       log.fail(`no "Add to Account" button found`);
       db.data[user][appId].status = 'failed: no claim button';
-      notify_games.push({ title, url: game.url, status: 'failed: no claim button' });
+      notify_games.push({ title, url: game.url, status: 'failed: no claim button', details: `Game: ${game.url}` });
       continue;
     }
 
@@ -404,14 +404,14 @@ try {
       } else {
         log.fail(`${title} — could not verify claim`);
         db.data[user][appId].status = 'failed';
-        notify_games.push({ title, url: game.url, status: 'failed' });
+        notify_games.push({ title, url: game.url, status: 'failed', details: `Game: ${game.url}` });
       }
 
       await page.screenshot({ path: screenshot(`${filenamify(title)}.png`) });
     } catch (e) {
       log.fail(`${title} — ${e.message}`);
       db.data[user][appId].status = 'failed';
-      notify_games.push({ title, url: game.url, status: 'failed' });
+      notify_games.push({ title, url: game.url, status: 'failed', details: `Game: ${game.url}` });
       await page.screenshot({ path: screenshot('failed', `${filenamify(title)}_${filenamify(datetime())}.png`) });
     }
   }

@@ -162,7 +162,11 @@ try {
       }
     }
     db.data[user][title].status ||= status;
-    notify_games.push({ title, url, status });
+    const notify_entry = { title, url, status };
+    if (status !== 'claimed' && status !== 'existed') {
+      notify_entry.details = `Game: ${url}`;
+    }
+    notify_games.push(notify_entry);
 
     if (status == 'claimed' && !cfg.gog_newsletter) {
       log.info('Unsubscribing from newsletters');

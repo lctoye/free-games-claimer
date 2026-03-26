@@ -202,6 +202,8 @@ try {
        || await page.locator('div:has-text("Link account")').count()) {
       log.warn(`Account linking required for ${store}`);
       notify_game.status = `failed: need account linking for ${store}`;
+      notify_game.details = `Link your ${store} account: use LOGIN_MODE=1 to open the login panel, then link via Prime Gaming settings.`;
+      await notify(`prime-gaming: ${title} requires account linking for ${store}. Link your account in Prime Gaming settings.`);
       db.data[user][title].status = 'failed: need account linking';
       // await page.pause();
       // await page.click('[data-a-target="LinkAccountModal"] [data-a-target="LinkAccountButton"]');
@@ -346,6 +348,9 @@ try {
           await page2.close();
         }
         notify_game.status = `<a href="${redeem_url}">${redeem_action}</a> ${code} on ${store}`;
+        if (redeem_action === 'redeem' || redeem_action === 'redeem (got captcha)' || redeem_action === 'redeem (not found)') {
+          notify_game.details = `Code: ${code} — Redeem: ${redeem_url}`;
+        }
       } else {
         notify_game.status = `claimed on ${store}`;
         db.data[user][title].status = 'claimed';

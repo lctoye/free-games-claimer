@@ -242,6 +242,7 @@ try {
     } else if (btnText == 'requires base game') {
       log.skip(title, 'requires base game');
       notify_game.status = 'requires base game';
+      notify_game.details = `Game: ${url}`;
       db.data[user][game_id].status ||= 'failed:requires-base-game';
       // TODO claim base game if it is free
       const baseUrl = 'https://store.epicgames.com' + await page.locator('a:has-text("Overview")').getAttribute('href');
@@ -251,7 +252,8 @@ try {
       urls.push(baseUrl); // add base game to the list of games to claim
       urls.push(url); // add add-on itself again
     } else { // GET
-      log.info(`Not in library — claiming (${btnText})`);
+      log.info(`${title} — claiming (${btnText})`);
+      let captchaDetected = false;
       await purchaseBtn.click({ delay: 11 }); // got stuck here without delay (or mouse move), see #75, 1ms was also enough
 
       // click Continue if 'Device not supported. This product is not compatible with your current device.' - avoided by Windows userAgent?
@@ -276,6 +278,7 @@ try {
       if (await iframe.locator(':has-text("unavailable in your region")').count() > 0) {
         log.skip(title, 'unavailable in your region');
         db.data[user][game_id].status = notify_game.status = 'unavailable-in-region';
+        notify_game.details = `Game: ${url}`;
         if (cfg.time) console.timeEnd('claim game');
         continue;
       }
@@ -311,15 +314,9 @@ try {
         // context.setDefaultTimeout(100 * 1000); // give time to solve captcha, iframe goes blank after 60s?
         const captcha = iframe.locator('#h_captcha_challenge_checkout_free_prod iframe');
         captcha.waitFor().then(async () => { // don't await, since element may not be shown
+          captchaDetected = true;
           log.warn('Got hCaptcha challenge — solve in browser or get a new IP address');
-          // await notify(`epic-games: got captcha challenge right before claim of <a href="${url}">${title}</a>. Use VNC to solve it manually.`); // TODO not all apprise services understand HTML: https://github.com/vogler/free-games-claimer/pull/417
-          await notify(`epic-games: got captcha challenge for.\nGame link: ${url}`);
-          // TODO could even create purchase URL, see https://github.com/vogler/free-games-claimer/pull/130
-          // await page.waitForTimeout(2000);
-          // const p = path.resolve(cfg.dir.screenshots, 'epic-games', 'captcha', `${filenamify(datetime())}.png`);
-          // await captcha.screenshot({ path: p });
-          // console.info('  Saved a screenshot of hcaptcha challenge to', p);
-          // console.error('  Got hcaptcha challenge. To avoid it, get a link from https://www.hcaptcha.com/accessibility'); // TODO save this link in config and visit it daily to set accessibility cookie to avoid captcha challenge?
+          await notify(`epic-games: got captcha challenge for ${title}.\nGame link: ${url}`);
         }).catch(_ => { }); // may time out if not shown
         iframe.locator('.payment__errors:has-text("Failed to challenge captcha, please try again later.")').waitFor().then(async () => {
           log.fail('Failed captcha challenge — try again later');
@@ -336,13 +333,79 @@ try {
         const p = screenshot('failed', `${game_id}_${filenamify(datetime())}.png`);
         await page.screenshot({ path: p, fullPage: true });
         db.data[user][game_id].status = 'failed';
+        if (captchaDetected) {
+          notify_game.captcha = true;
+        }
       }
       notify_game.status = db.data[user][game_id].status; // claimed or failed
+      if (notify_game.status === 'failed') {
+        if (captchaDetected) {
+          notify_game.details = `Captcha blocked claim — will retry. Game: ${url}`;
+        } else {
+          notify_game.details = `Game: ${url}`;
+        }
+      }
 
       const p = screenshot(`${game_id}.png`);
       if (!existsSync(p)) await page.screenshot({ path: p, fullPage: false }); // fullPage is quite long...
     }
     if (cfg.time) console.timeEnd('claim game');
+  }
+
+  const captchaRetries = notify_games.filter(g => g.captcha && g.status === 'failed');
+  if (captchaRetries.length) {
+    log.info(`Retrying ${captchaRetries.length} captcha-failed game(s) in 60s...`);
+    await page.waitForTimeout(60000);
+    for (const retry of captchaRetries) {
+      log.info(`Retrying ${retry.title}...`);
+      try {
+        await page.goto(retry.url, { waitUntil: 'domcontentloaded' });
+        await page.waitForFunction(
+          () => {
+            const btn = document.querySelector('button[data-testid="purchase-cta-button"]');
+            return btn && /[ei]/i.test(btn.textContent) && btn.textContent != 'Loading';
+          }
+        );
+        const purchaseBtn = page.locator('button[data-testid="purchase-cta-button"]').first();
+        const btnText = (await purchaseBtn.innerText()).toLowerCase();
+        if (btnText === 'in library') {
+          log.ok(`${retry.title} — claimed (already in library after retry)`);
+          retry.status = 'claimed';
+          retry.details = '';
+          retry.captcha = false;
+          const game_id = page.url().split('/').pop();
+          db.data[user][game_id].status = 'claimed';
+          continue;
+        }
+        if (btnText !== 'get') {
+          log.fail(`${retry.title} — unexpected button: ${btnText}`);
+          retry.status = 'failed';
+          retry.details = `Retry also failed. Game: ${retry.url}`;
+          continue;
+        }
+        log.info(`${retry.title} — claiming (retry)`);
+        await purchaseBtn.click({ delay: 11 });
+        page.click('button:has-text("Continue")').catch(_ => { });
+        page.click('button:has-text("Yes, buy now")').catch(_ => { });
+        await page.waitForSelector('#webPurchaseContainer iframe');
+        const iframe = page.frameLocator('#webPurchaseContainer iframe');
+        const btnAgree = iframe.locator('button:has-text("I Accept")');
+        btnAgree.waitFor().then(() => btnAgree.click()).catch(_ => { });
+        await iframe.locator('button:has-text("Place Order"):not(:has(.payment-loading--loading))').click({ delay: 11 });
+        await page.locator('text=Thanks for your order!').waitFor({ state: 'attached' });
+        const game_id = page.url().split('/').pop();
+        db.data[user][game_id].status = 'claimed';
+        db.data[user][game_id].time = datetime();
+        log.ok(`${retry.title} — claimed on retry!`);
+        retry.status = 'claimed';
+        retry.details = '';
+        retry.captcha = false;
+      } catch (e) {
+        log.fail(`${retry.title} — retry failed`);
+        if (cfg.debug) console.error(e);
+        retry.details = `Retry also failed. Game: ${retry.url}`;
+      }
+    }
   }
 } catch (error) {
   process.exitCode ||= 1;

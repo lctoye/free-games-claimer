@@ -207,6 +207,35 @@ These files support running the project in the Replit environment and should not
 
 ---
 
+## Notification & Retry Overhaul
+
+### Richer notification summaries
+- `html_game_list` in `src/util.js` now supports a `details` field on game entries — when present, a second line is appended to the notification with additional context (redeem codes, URLs, action guidance)
+- Failed claims include the game URL directly in the notification body
+- Prime Gaming redeem codes include plaintext code + redeem URL in the notification details line (in addition to the existing HTML link in the status)
+
+### Actionable failure notifications
+- Prime Gaming: "account linking required" now sends an immediate push notification with the game title, store name, and guidance on how to link
+- Epic Games: captcha notification now includes the game title (was previously blank: "got captcha challenge for.")
+
+### Epic Games captcha retry
+- When a game fails due to hCaptcha, it's queued for retry
+- After all games are processed, captcha-failed games are retried once after a 60-second delay
+- If retry succeeds, the game status is updated to "claimed" in both the database and notification
+- If retry also fails, the notification includes "Retry also failed" with the game URL
+
+### Clearer log output
+- Epic Games claiming line now shows the game title: `✓ Havendock — claiming (get)` instead of `✓ Not in library — claiming (get)`
+
+### Files changed
+- `src/util.js`: `html_game_list` updated to support `details` field
+- `epic-games.js`: captcha retry loop, game name on claiming line, captcha tracking, details on failures
+- `prime-gaming.js`: account linking notification, redeem code details
+- `gog.js`: failure details with game URL
+- `steam.js`: failure details with game URL
+
+---
+
 ## Summary of All Changed Files
 
 | File | Change Type | Description |
