@@ -202,8 +202,8 @@ try {
        || await page.locator('div:has-text("Link account")').count()) {
       log.warn(`Account linking required for ${store}`);
       notify_game.status = `failed: need account linking for ${store}`;
-      notify_game.details = `Link your ${store} account: use LOGIN_MODE=1 to open the login panel, then link via Prime Gaming settings.`;
-      await notify(`prime-gaming: ${title} requires account linking for ${store}. Link your account in Prime Gaming settings.`);
+      notify_game.details = `Link your ${store} account at https://gaming.amazon.com/settings/connections`;
+      await notify(`prime-gaming: ${title} requires account linking for ${store}.\nLink your account: https://gaming.amazon.com/settings/connections`);
       db.data[user][title].status = 'failed: need account linking';
       // await page.pause();
       // await page.click('[data-a-target="LinkAccountModal"] [data-a-target="LinkAccountButton"]');
