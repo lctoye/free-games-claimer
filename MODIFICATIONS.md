@@ -238,6 +238,15 @@ These files support running the project in the Replit environment and should not
 - If retry also fails, the notification includes "Retry also failed" with the game URL
 - Deterministic captcha detection: both the async callback flag and a direct iframe element check (`#h_captcha_challenge_checkout_free_prod iframe`) are used in the catch block
 
+### Epic Games cart link fallback
+- When games fail to claim (captcha, timeout, errors), the notification now includes a **pre-populated cart URL** for one-click manual checkout
+- Offer IDs are fetched from Epic's public promotions API (`freeGamesPromotions`) at script startup — no authentication needed
+- Each failed game's notification details gets an individual "Claim in cart" link
+- A combined cart link with all failed games is appended as a bold action item in the summary notification
+- URL format: `https://store.epicgames.com/en-US/cart?offerId=XXX&offerId=YYY`
+- Graceful degradation: if the API is unreachable or no offer IDs match, claiming still works normally — the cart link is simply omitted
+- Slug matching uses proper URL pathname parsing with decoding; offer IDs are deduplicated
+
 ### Clearer log output
 - Epic Games claiming line now uses `log.ok` (4-space indent) instead of `log.info` (2-space indent), matching the other game status lines: `    ✓ Havendock — claiming (get)` instead of `  ✓ Not in library — claiming (get)`
 
@@ -247,7 +256,7 @@ These files support running the project in the Replit environment and should not
 
 ### Files changed
 - `src/util.js`: `html_game_list` updated — `details` field supports HTML, no longer escaped
-- `epic-games.js`: captcha retry loop, deterministic captcha detection, game name on claiming line (4-space indent), clickable details links, failed-captcha notification with title/URL
+- `epic-games.js`: captcha retry loop, deterministic captcha detection, game name on claiming line (4-space indent), clickable details links, failed-captcha notification with title/URL, cart link fallback with promotions API offer IDs
 - `prime-gaming.js`: account linking detection fix (specific selectors, success-first check, settle wait), clickable redeem/linking details, immediate notification with direct URL
 - `gog.js`: failure details with game URL
 - `steam.js`: "already in library" wording fix, summary counter fix, failure details with game URL
@@ -261,7 +270,7 @@ These files support running the project in the Replit environment and should not
 | `steam.js` | **New** | Steam free-to-keep game claimer with SteamDB discovery, log consistency fixes |
 | `interactive-login.js` | **New** | Interactive VNC login panel with 4-site support |
 | `prime-gaming.js` | Modified | patchright import, login bug fix, awaited notify(), log.* audit, DLC flow cleanup, account linking false-positive fix, clickable redeem/linking notifications |
-| `epic-games.js` | Modified | patchright import, awaited notify(), log.* audit, platform dedup, removed "in library" notification, captcha retry, clickable failure links |
+| `epic-games.js` | Modified | patchright import, awaited notify(), log.* audit, platform dedup, removed "in library" notification, captcha retry, clickable failure links, cart link fallback |
 | `gog.js` | Modified | patchright import, awaited notify(), selector fix, log.* audit |
 | `src/util.js` | Modified | Removed stealth()/launchChromium(), added `log` helper object, `html_game_list` details with HTML support |
 | `src/config.js` | Modified | Removed AliExpress config, added login_mode, Steam config |

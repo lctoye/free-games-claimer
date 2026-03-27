@@ -78,6 +78,7 @@ export const notify = html => new Promise((resolve, reject) => {
 export const escapeHtml = unsafe => unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll('\'', '&#039;');
 
 export const html_game_list = games => games.map(g => {
+  if (g.status === 'action') return `<b><a href="${g.url}">${escapeHtml(g.title)}</a></b>`;
   let line = `- <a href="${g.url}">${escapeHtml(g.title)}</a> (${g.status})`;
   if (g.details) line += `<br>  ${g.details}`;
   return line;

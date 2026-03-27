@@ -10,9 +10,29 @@ const screenshot = (...a) => resolve(cfg.dir.screenshots, 'epic-games', ...a);
 
 const URL_CLAIM = 'https://store.epicgames.com/en-US/free-games';
 const URL_LOGIN = 'https://www.epicgames.com/id/login?lang=en-US&noHostRedirect=true&redirectUrl=' + URL_CLAIM;
+const URL_PROMOTIONS = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=en-US';
 
 log.section('Epic Games');
 log.status('Time', datetime());
+
+const offerIdMap = {};
+try {
+  const res = await fetch(URL_PROMOTIONS);
+  const data = await res.json();
+  for (const el of data?.data?.Catalog?.searchStore?.elements || []) {
+    const promos = el.promotions?.promotionalOffers?.[0]?.promotionalOffers || [];
+    const isFree = promos.some(o => o.discountSetting?.discountPercentage === 0);
+    if (!isFree) continue;
+    const slug = el.catalogNs?.mappings?.[0]?.pageSlug || el.urlSlug;
+    if (slug) offerIdMap[slug] = el.id;
+  }
+  if (Object.keys(offerIdMap).length) {
+    log.status('Offer IDs fetched', Object.keys(offerIdMap).length);
+  }
+} catch (e) {
+  log.warn('Could not fetch offer IDs from promotions API');
+  if (cfg.debug) console.error(e);
+}
 
 const db = await jsonDb('epic-games.json', {});
 
@@ -408,6 +428,29 @@ try {
       }
     }
   }
+
+  const failedGames = notify_games.filter(g => g.status === 'failed');
+  if (failedGames.length && Object.keys(offerIdMap).length) {
+    const slugFromUrl = url => {
+      try { return decodeURIComponent(new URL(url).pathname.replace(/\/+$/, '').split('/').pop()); } catch { return url.split('/').pop(); }
+    };
+    const failedOfferIds = [...new Set(failedGames.map(g => offerIdMap[slugFromUrl(g.url)]).filter(Boolean))];
+    if (failedOfferIds.length) {
+      log.info(`Cart fallback — ${failedOfferIds.length}/${failedGames.length} failed game(s) matched to offer IDs`);
+      const cartUrl = `https://store.epicgames.com/en-US/cart?${failedOfferIds.map(id => `offerId=${id}`).join('&')}`;
+      log.info(`Cart link — ${cartUrl}`);
+      for (const g of failedGames) {
+        const offerId = offerIdMap[slugFromUrl(g.url)];
+        if (offerId) {
+          const singleCartUrl = `https://store.epicgames.com/en-US/cart?offerId=${offerId}`;
+          g.details = (g.details ? g.details + ' · ' : '') + `<a href="${singleCartUrl}">Claim in cart</a>`;
+        }
+      }
+      notify_games.push({ title: `🛒 Claim ${failedOfferIds.length} game(s) in one click`, url: cartUrl, status: 'action' });
+    } else {
+      log.warn(`Cart fallback — 0/${failedGames.length} failed game(s) matched to offer IDs`);
+    }
+  }
 } catch (error) {
   process.exitCode ||= 1;
   log.fail(`Exception: ${error.message || error}`);
@@ -417,7 +460,7 @@ try {
   if (cfg.time) console.timeEnd('claim all games');
   await db.write();
   log.sectionEnd();
-  if (notify_games.filter(g => g.status == 'claimed' || g.status == 'failed').length) {
+  if (notify_games.filter(g => g.status == 'claimed' || g.status == 'failed' || g.status == 'action').length) {
     await notify(`epic-games (${user}):<br>${html_game_list(notify_games)}`);
   }
 }
